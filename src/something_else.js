@@ -1,5 +1,4 @@
 const canvasSketch = require("canvas-sketch");
-const Random = require("canvas-sketch-util/random");
 const { linspace, lerp } = require("canvas-sketch-util/math");
 const random = require("canvas-sketch-util/random");
 
@@ -7,14 +6,14 @@ const random = require("canvas-sketch-util/random");
 const defaultSeed = "";
 
 // Set a random seed so we can reproduce this print later
-Random.setSeed(defaultSeed || Random.getRandomSeed());
+random.setSeed(defaultSeed || random.getRandomSeed());
 
 // Print to console so we can see which seed is being used and copy it if desired
-console.log("Random Seed:", Random.getSeed());
+console.log("Random Seed:", random.getSeed());
 
 const settings = {
   hotkeys: false,
-  suffix: Random.getSeed(),
+  suffix: random.getSeed(),
   dimensions: "letter",
   orientation: "portrait",
   pixelsPerInch: 300,
@@ -33,19 +32,40 @@ const palette = [
 
 const sketch = ({ width, height }) => {
   // page settings
-  const margin = 1;
-  const pointCount = 50;
+  const margin = 2;
+  const pointCount = 10;
   const background = "hsl(0, 0%, 98%)";
 
   // segment settings
-  const frequency = 0.7;
+  //   const frequency = 0.7;
   const alpha = 1;
 
   // Create some flat data structure worth of points
+  let x = 0;
+  let y = 0;
+  let c = 0;
+
+  // chromosomes/squid
+  //   let gaussStddev = 0.1;
+  //   let gaussMean = 0.01;
+
+  let gaussStddev = 5;
+  let gaussMean = 0.2;
+
+  let gaussSizeStddev = 2;
+  let gaussSizeMean = 0.1;
+
   const points = Array.from(new Array(pointCount)).map(() => {
+    if (c % 2 == 0) {
+      x = (x + random.gaussian(gaussMean, gaussStddev)) % 1;
+    } else {
+      y = (y + random.gaussian(gaussMean, gaussStddev)) % 1;
+    }
+    c++;
     return {
-      position: [random.value(), random.value()],
-      size: Math.abs(random.gaussian()),
+      position: [x, y],
+      //   position: [random.value(), random.value()],
+      size: Math.abs(random.gaussian(gaussSizeMean, gaussSizeStddev)),
     };
   });
   console.log(points);
@@ -71,16 +91,37 @@ const sketch = ({ width, height }) => {
       context.strokeStyle = foreground;
 
       // get a random angle from noise
-      const n = Random.noise2D(u * 2 - 1, v * 2 - 1, frequency);
+      //   const n = random.noise2D(u * 2 - 1, v * 2 - 1, frequency);
 
       context.fillStyle = "hsl(0, 0%, 15%)";
       context.strokeStyle = random.pick(palette);
       context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2, false);
+      context.arc(x, y, radius, 0, Math.PI * 2, true);
       context.stroke();
     });
   };
 };
+
+function segment(
+  context,
+  x,
+  y,
+  angle = 0,
+  length = 1,
+  lineWidth = 1,
+  color = foreground
+) {
+  const halfLength = length / 2;
+  const u = Math.cos(angle) * halfLength;
+  const v = Math.sin(angle) * halfLength;
+
+  context.strokeStyle = color;
+  context.beginPath();
+  context.moveTo(x - u, y - v);
+  context.lineTo(x + u, y + v);
+  context.lineWidth = lineWidth;
+  context.stroke();
+}
 
 function hexToHSL(H) {
   // Convert hex to RGB first
