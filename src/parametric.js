@@ -32,14 +32,6 @@ const line_palette = [
   "#4ea8de",
 ].map((x) => hexToHSL(x));
 
-const circle_palette = [
-  "#48bfe3",
-  "#56cfe1",
-  "#64dfdf",
-  "#72efdd",
-  "#80ffdb",
-].map((x) => hexToHSL(x));
-
 const sketch = ({ width, height }) => {
   const pageSize = Math.min(width, height);
 
@@ -82,30 +74,6 @@ const sketch = ({ width, height }) => {
 
     // draw grid
     const innerSize = pageSize - margin * 2;
-    // console.log(cells);
-
-    // circles
-    points.forEach(({ position, size }) => {
-      radius = size * width * 0.05;
-      const [u, v] = position;
-      context.lineWidth = lineWidth;
-
-      // scale to inner size
-      let x = u * innerSize;
-      let y = v * innerSize;
-
-      context.globalAlpha = alpha;
-      context.strokeStyle = foreground;
-
-      x += (width - innerSize) / 2;
-      y += (height - innerSize) / 2;
-
-      context.fillStyle = "hsl(0, 0%, 15%)";
-      context.strokeStyle = random.pick(circle_palette);
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2, false);
-      context.stroke();
-    });
 
     // lines
     cells.forEach((cell) => {

@@ -1,4 +1,5 @@
 const canvasSketch = require("canvas-sketch");
+const Random = require("canvas-sketch-util/random");
 const { linspace, lerp } = require("canvas-sketch-util/math");
 const random = require("canvas-sketch-util/random");
 
@@ -6,14 +7,14 @@ const random = require("canvas-sketch-util/random");
 const defaultSeed = "";
 
 // Set a random seed so we can reproduce this print later
-random.setSeed(defaultSeed || random.getRandomSeed());
+Random.setSeed(defaultSeed || Random.getRandomSeed());
 
 // Print to console so we can see which seed is being used and copy it if desired
-console.log("Random Seed:", random.getSeed());
+console.log("Random Seed:", Random.getSeed());
 
 const settings = {
   hotkeys: false,
-  suffix: random.getSeed(),
+  suffix: Random.getSeed(),
   dimensions: "letter",
   orientation: "portrait",
   pixelsPerInch: 300,
@@ -22,82 +23,118 @@ const settings = {
 
 const foreground = "hsl(345, 100%, 50%)";
 
-const palette = [
-  hexToHSL("#264653"),
-  hexToHSL("#2a9d8f"),
-  hexToHSL("#e9c46a"),
-  hexToHSL("#f4a261"),
-  hexToHSL("#e76f51"),
-];
+// blues
+const line_palette = [
+  "#7400b8",
+  "#6930c3",
+  "#5e60ce",
+  "#5390d9",
+  "#4ea8de",
+].map((x) => hexToHSL(x));
+
+const circle_palette = [
+  "#48bfe3",
+  "#56cfe1",
+  "#64dfdf",
+  "#72efdd",
+  "#80ffdb",
+].map((x) => hexToHSL(x));
 
 const sketch = ({ width, height }) => {
+  const pageSize = Math.min(width, height);
+
   // page settings
-  const margin = 2;
-  const pointCount = 10;
+  const margin = pageSize * 0.1;
+  const gridSize = 50;
   const background = "hsl(0, 0%, 98%)";
 
   // segment settings
-  //   const frequency = 0.7;
-  const alpha = 1;
+  const length = pageSize * 0.03;
+  // bigger = more graphic
+  const lineWidth = pageSize * 0.1;
+  // low frequency = more regular waves, higher = more random
+  const frequency = 0.1;
+  // transparency
+  const alpha = 0.2;
 
   // Create some flat data structure worth of points
-  let x = 0;
-  let y = 0;
-  let c = 0;
+  const cells = linspace(gridSize, false)
+    .map((v) => {
+      return linspace(gridSize, false).map((u) => {
+        return [u, v];
+      });
+    })
+    .flat();
 
-  // chromosomes/squid
-  //   let gaussStddev = 0.1;
-  //   let gaussMean = 0.01;
-
-  let gaussStddev = 5;
-  let gaussMean = 0.2;
-
-  let gaussSizeStddev = 2;
-  let gaussSizeMean = 0.1;
-
+  const pointCount = 100;
   const points = Array.from(new Array(pointCount)).map(() => {
-    if (c % 2 == 0) {
-      x = (x + random.gaussian(gaussMean, gaussStddev)) % 1;
-    } else {
-      y = (y + random.gaussian(gaussMean, gaussStddev)) % 1;
-    }
-    c++;
     return {
-      position: [x, y],
-      //   position: [random.value(), random.value()],
-      size: Math.abs(random.gaussian(gaussSizeMean, gaussSizeStddev)),
+      position: [random.value(), random.value()],
+      size: Math.abs(random.gaussian()),
     };
   });
-  console.log(points);
 
-  return ({ context, width, height }) => {
+  return ({ context }) => {
     // Fill the canvas
     context.fillStyle = background;
     context.globalAlpha = 1;
     context.fillRect(0, 0, width, height);
 
     // draw grid
+    const innerSize = pageSize - margin * 2;
+    // console.log(cells);
+
+    // circles
     points.forEach(({ position, size }) => {
       radius = size * width * 0.05;
       const [u, v] = position;
-      context.lineWidth = 0.1;
+      context.lineWidth = lineWidth;
 
       // scale to inner size
-      let x = lerp(margin, width - margin, u);
-      let y = lerp(margin, height - margin, v);
+      let x = u * innerSize;
+      let y = v * innerSize;
+
+      context.globalAlpha = alpha;
+      context.strokeStyle = foreground;
+
+      x += (width - innerSize) / 2;
+      y += (height - innerSize) / 2;
+
+      context.fillStyle = "hsl(0, 0%, 15%)";
+      context.strokeStyle = random.pick(circle_palette);
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2, false);
+      context.stroke();
+    });
+
+    // lines
+    cells.forEach((cell) => {
+      const [u, v] = cell;
+
+      // scale to inner size
+      let x = u * innerSize;
+      let y = v * innerSize;
+
+      // center on page
+      x += (width - innerSize) / 2;
+      y += (height - innerSize) / 2;
 
       // draw cell
       context.globalAlpha = alpha;
       context.strokeStyle = foreground;
 
       // get a random angle from noise
-      //   const n = random.noise2D(u * 2 - 1, v * 2 - 1, frequency);
-
-      context.fillStyle = "hsl(0, 0%, 15%)";
-      context.strokeStyle = random.pick(palette);
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2, true);
-      context.stroke();
+      const n = Random.noise2D(u * 2 - 1, v * 2 - 1, frequency);
+      const angle = n * Math.PI * 2;
+      segment(
+        context,
+        x,
+        y,
+        angle,
+        length,
+        lineWidth,
+        random.pick(line_palette)
+      );
     });
   };
 };
