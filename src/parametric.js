@@ -30,6 +30,11 @@ const line_palette = [
   "#5e60ce",
   "#5390d9",
   "#4ea8de",
+  "#48bfe3",
+  "#56cfe1",
+  "#64dfdf",
+  "#72efdd",
+  "#80ffdb",
 ].map((x) => hexToHSL(x));
 
 const sketch = ({ width, height }) => {
@@ -37,15 +42,15 @@ const sketch = ({ width, height }) => {
 
   // page settings
   const margin = pageSize * 0.1;
-  const gridSize = 50;
+  const gridSize = 200;
   const background = "hsl(0, 0%, 98%)";
 
   // segment settings
-  const length = pageSize * 0.03;
+  const length = pageSize * 0.09;
   // bigger = more graphic
-  const lineWidth = pageSize * 0.1;
+  const lineWidth = pageSize * 0.02;
   // low frequency = more regular waves, higher = more random
-  const frequency = 0.1;
+  const frequency = 0.9;
   // transparency
   const alpha = 0.2;
 

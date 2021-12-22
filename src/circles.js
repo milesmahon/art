@@ -33,13 +33,13 @@ const palette = [
 
 const sketch = ({ width, height }) => {
   // page settings
-  const margin = 1;
+  const margin = 2;
   const pointCount = 50;
   const background = "hsl(0, 0%, 98%)";
 
   // segment settings
-  const frequency = 0.7;
-  const alpha = 1;
+  const frequency = 0.6;
+  const alpha = 0.5;
 
   // Create some flat data structure worth of points
   const points = Array.from(new Array(pointCount)).map(() => {
@@ -48,7 +48,6 @@ const sketch = ({ width, height }) => {
       size: Math.abs(random.gaussian()),
     };
   });
-  console.log(points);
 
   return ({ context, width, height }) => {
     // Fill the canvas
@@ -58,9 +57,9 @@ const sketch = ({ width, height }) => {
 
     // draw grid
     points.forEach(({ position, size }) => {
-      radius = size * width * 0.05;
+      radius = size * width * 0.06;
       const [u, v] = position;
-      context.lineWidth = 0.1;
+      context.lineWidth = 0.05;
 
       // scale to inner size
       let x = lerp(margin, width - margin, u);
